@@ -45,11 +45,9 @@ public class MainActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Novel novel = list.get(i);
-                /**
-                 Intent intent = new Intent(MainActivity.this,);
+                 Intent intent = new Intent(MainActivity.this,NovelActivity.class);
                  intent.putExtra("novel",novel);
                  startActivityForResult(intent,0);
-                 */
             }
         });
         create_frag_search.setOnClickListener(new View.OnClickListener() {

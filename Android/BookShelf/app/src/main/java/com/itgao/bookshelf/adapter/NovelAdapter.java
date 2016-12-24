@@ -46,7 +46,6 @@ public class NovelAdapter extends ArrayAdapter<Novel>{
         }else{
             // 设置一张默认的背景图片
         }
-        Log.v("zuixin","zhuxom"+novel.getMax_chapter());
         novel_update.setText(novel.getMax_chapter());
         return view;
     }

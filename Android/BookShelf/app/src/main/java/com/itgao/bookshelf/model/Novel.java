@@ -52,4 +52,15 @@ public class Novel implements Serializable {
     public void setMax_chapter(String max_chapter) {
         this.max_chapter = max_chapter;
     }
+
+    @Override
+    public String toString() {
+        return "Novel{" +
+                "id=" + id +
+                ", novel_name='" + novel_name + '\'' +
+                ", chapter_index=" + chapter_index +
+                ", img_path='" + img_path + '\'' +
+                ", max_chapter='" + max_chapter + '\'' +
+                '}';
+    }
 }

@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 public class SearchActivity extends AppCompatActivity {
 
+    private TextView test;
     private EditText edit_search;
     private ImageButton button_search;
     private TextView wait_text;
@@ -41,7 +42,7 @@ public class SearchActivity extends AppCompatActivity {
      */
     private final String findNovelUrl = "window.location=\'(.*?)\'\"";
     private final String findChaptersUrl = "<dd>.*?<a.*?href=\"(.*?)\">(.*?)</a>";
-    private final String findLatestChapter = "<p>最新章节.*?<a.*?>(.*?)</a>";
+    private final String findLatestChapter = "<p>.*?最新章节.*?<a.*?>(.*?)</a>";
     private final String findImgUrl = "<img.*?src=\"(.*?)\".*?alt=\"<em>.*?</em>";
     private final String uri = "http://zhannei.baidu.com/cse/search?s=287293036948159515&q=";
     private final int RESULT_CODE = 0;
@@ -58,6 +59,9 @@ public class SearchActivity extends AppCompatActivity {
             switch (msg.what){
                 case 1:
                     wait_text.setText("成功收入！");
+                    break;
+                case 2:
+                    test.setText(msg.obj.toString());
                     break;
             }
         }
@@ -78,6 +82,7 @@ public class SearchActivity extends AppCompatActivity {
         edit_search = (EditText) findViewById(R.id.edit_search);
         button_search = (ImageButton) findViewById(R.id.button_search);
         wait_text = (TextView) findViewById(R.id.wait_text);
+        test = (TextView) findViewById(R.id.test);
         cache = new File(Environment.getExternalStorageDirectory(),"cache");
         if(!cache.exists()){
             cache.mkdirs();
@@ -95,7 +100,7 @@ public class SearchActivity extends AppCompatActivity {
                 }
                 novelName = edit_search.getText().toString();
                 wait_text.setText("等待片刻");
-                Log.v("novel_name",novelName);
+
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -105,8 +110,10 @@ public class SearchActivity extends AppCompatActivity {
                             message.what = 1;
                             handler.sendMessage(message);
                         }catch (Exception e){
+
                             e.printStackTrace();
-                            return ;
+                            Log.v("novel_namegrfg",novelName+"dsad");
+
                         }
                     }
                 }).start();
@@ -121,11 +128,14 @@ public class SearchActivity extends AppCompatActivity {
 
     public void parse_info(String novel_name){
         String name = null;
+        Log.v("url",uri);
         try {
             name = URLEncoder.encode(novel_name,"UTF-8");
+
             String url = uri + name;
+
             String html = new String(StreamTool.getHtml(url),"utf-8");
-            Log.v("html",html);
+
             Pattern pattern1 = Pattern.compile(findImgUrl);
             Matcher matcher1 = pattern1.matcher(html);
             if(matcher1.find()){
@@ -136,15 +146,18 @@ public class SearchActivity extends AppCompatActivity {
             pattern1 = Pattern.compile(findNovelUrl);
             matcher1 = pattern1.matcher(html);
             String novel_uri = "";
+
             if (matcher1.find()){
                 novel_uri = matcher1.group(1);
             //    novel_uri = novel_uri.replace("m","www");
 
-                String novelList = new String(StreamTool.getHtml(novel_uri),"gbk");
-                pattern1 = Pattern.compile(findLatestChapter);
-                matcher1 = pattern1.matcher(novelList);
-                if(matcher1.find()){
-                    chapter = matcher1.group(1);
+                String novelList = new String(StreamTool.getHtml(novel_uri),"utf-8");
+                Pattern pattern2 = Pattern.compile(findLatestChapter);
+                Matcher matcher2 = pattern2.matcher(novelList);
+                Log.v("pattern2",findLatestChapter);
+                if(matcher2.find()){
+                    chapter = matcher2.group(1);
+                    Log.v("newchapter",chapter);
                 }
                 save_novel(novel_name);
                 pattern1 = Pattern.compile(findChaptersUrl);
@@ -155,7 +168,7 @@ public class SearchActivity extends AppCompatActivity {
                 }
 
             }
-        } catch (UnsupportedEncodingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -173,7 +186,7 @@ public class SearchActivity extends AppCompatActivity {
         novel.setMax_chapter(chapter);
         novel_id = novelDB.saveNovel(novel);
 
-        Log.v("novel",novel.getMax_chapter()+novel_id);
+        Log.v("nddsaovel",novel.toString());
     }
     public void save_chapter(String novel_uri,Matcher matcher,int novel_id,int index){
         String chapter_url = novel_uri+matcher.group(1);
@@ -185,7 +198,7 @@ public class SearchActivity extends AppCompatActivity {
         chapter.setNovel("");
         chapter.setNovel_id(novel_id);
         chapter.setNow_index(index);
-        Log.v("chapter_name",chapter_name);
+        Log.v("chapter",chapter.toString());
         novelDB.saveChapter(chapter);
     }
 

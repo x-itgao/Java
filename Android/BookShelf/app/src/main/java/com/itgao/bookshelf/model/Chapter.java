@@ -59,5 +59,18 @@ public class Chapter implements Serializable{
 
     public void setNovel(String text) {
         this.novel = text;
+
+    }
+
+    @Override
+    public String toString() {
+        return "Chapter{" +
+                "id=" + id +
+                ", novel_id=" + novel_id +
+                ", now_index=" + now_index +
+                ", chapter_name='" + chapter_name + '\'' +
+                ", text_url='" + text_url + '\'' +
+                ", novel='" + novel + '\'' +
+                '}';
     }
 }

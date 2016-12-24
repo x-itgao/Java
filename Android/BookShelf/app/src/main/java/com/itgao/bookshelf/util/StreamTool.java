@@ -34,19 +34,21 @@ public class StreamTool {
             connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(8000);
-            String text = "";
+            String text = "";Log.v("data","om");
             if ((code=connection.getResponseCode()) == 200 || code==304)  {
                 InputStream inputStream = connection.getInputStream();
                 byte[] data = read(inputStream);
+
                 return data;
 
             }
 
         } catch (Exception e) {
-            return null;
+            Log.v("linenum","47");
+            e.printStackTrace();
         }
-        Log.v("data",""+code);
-        return  null;
+        Log.v("data","code"+code);
+        return  "error".getBytes();
 
     }
     public static void getImage(String url,File file){
