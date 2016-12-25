@@ -9,6 +9,7 @@ import android.util.Log;
 import com.itgao.bookshelf.model.Chapter;
 import com.itgao.bookshelf.model.Novel;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +48,7 @@ public class NovelDB {
             values.put("chapter_index",novels.getChapter_index());
             values.put("img_path",novels.getImg_path());
             values.put("max_chapter",novels.getMax_chapter());
+            values.put("novel_url",novels.getNovel_url());
             db.insert("Novel",null,values);
             Cursor cursor = db.rawQuery("select last_insert_rowid() from Novel",null);
 
@@ -57,15 +59,20 @@ public class NovelDB {
         }
         return id;
     }
+
+
+
     public void updateNovel(Novel novels){
         ContentValues values = new ContentValues();
         values.put("novel_name",novels.getNovel_name());
         values.put("chapter_index",novels.getChapter_index());
         values.put("img_path",novels.getImg_path());
         values.put("max_chapter",novels.getMax_chapter());
+        values.put("novel_url",novels.getNovel_url());
         db.update("Novel",values,"id = ?",new String[]{String.valueOf(novels.getId())});
 
     }
+
 
 
     public List<Novel> loadAllNovels(){
@@ -79,6 +86,7 @@ public class NovelDB {
                 novels.setChapter_index(cursor.getInt(cursor.getColumnIndex("chapter_index")));
                 novels.setImg_path(cursor.getString(cursor.getColumnIndex("img_path")));
                 novels.setMax_chapter(cursor.getString(cursor.getColumnIndex("max_chapter")));
+                novels.setNovel_url(cursor.getString(cursor.getColumnIndex("novel_url")));
                 list.add(novels);
             }while (cursor.moveToNext());
         }

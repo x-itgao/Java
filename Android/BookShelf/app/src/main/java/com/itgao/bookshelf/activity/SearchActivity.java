@@ -21,6 +21,7 @@ import com.itgao.bookshelf.util.StreamTool;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,7 +43,7 @@ public class SearchActivity extends AppCompatActivity {
      */
     private final String findNovelUrl = "window.location=\'(.*?)\'\"";
     private final String findChaptersUrl = "<dd>.*?<a.*?href=\"(.*?)\">(.*?)</a>";
-    private final String findLatestChapter = "<p>.*?最新章节.*?<a.*?>(.*?)</a>";
+    public static final String findLatestChapter = "<p>.*?最新章节.*?<a.*?>(.*?)</a>";
     private final String findImgUrl = "<img.*?src=\"(.*?)\".*?alt=\"<em>.*?</em>";
     private final String uri = "http://zhannei.baidu.com/cse/search?s=287293036948159515&q=";
     private final int RESULT_CODE = 0;
@@ -52,6 +53,7 @@ public class SearchActivity extends AppCompatActivity {
     private String imgUrl;
     private File cache;
     private int novel_id;
+    private String novel_URL;
 
     Handler handler = new Handler(){
         @Override
@@ -99,6 +101,13 @@ public class SearchActivity extends AppCompatActivity {
                     return;
                 }
                 novelName = edit_search.getText().toString();
+                if(isSaved(novelName)){
+                    Message message = new Message();
+                    message.what = 2;
+                    message.obj = "已经有了";
+                    handler.sendMessage(message);
+                    return ;
+                }
                 wait_text.setText("等待片刻");
 
                 new Thread(new Runnable() {
@@ -121,7 +130,17 @@ public class SearchActivity extends AppCompatActivity {
             }
         });
     }
-
+    public boolean isSaved(String name){
+        // 不想写了，先凑合着用，以以后再改
+        List<Novel> list = novelDB.loadAllNovels();
+        for (Novel novel : list){
+            Log.v("name",novel.getNovel_name());
+            if(name.equals(novel.getNovel_name())){
+                return true;
+            }
+        }
+        return false;
+    }
     public void get_novel(String novel_name){
         parse_info(novel_name);
     }
@@ -150,7 +169,7 @@ public class SearchActivity extends AppCompatActivity {
             if (matcher1.find()){
                 novel_uri = matcher1.group(1);
             //    novel_uri = novel_uri.replace("m","www");
-
+                novel_URL = novel_uri;
                 String novelList = new String(StreamTool.getHtml(novel_uri),"utf-8");
                 Pattern pattern2 = Pattern.compile(findLatestChapter);
                 Matcher matcher2 = pattern2.matcher(novelList);
@@ -182,6 +201,7 @@ public class SearchActivity extends AppCompatActivity {
         StreamTool.getImage(imgUrl,file);
         imgUrl = file.getAbsolutePath();
 
+        novel.setNovel_url(novel_URL);
         novel.setImg_path(imgUrl);
         novel.setMax_chapter(chapter);
         novel_id = novelDB.saveNovel(novel);
@@ -189,7 +209,7 @@ public class SearchActivity extends AppCompatActivity {
         Log.v("nddsaovel",novel.toString());
     }
     public void save_chapter(String novel_uri,Matcher matcher,int novel_id,int index){
-        String chapter_url = novel_uri+matcher.group(1);
+        String chapter_url = "http://www.biquge.com"+matcher.group(1);
         String chapter_name = matcher.group(2);
 
         Chapter chapter = new Chapter();

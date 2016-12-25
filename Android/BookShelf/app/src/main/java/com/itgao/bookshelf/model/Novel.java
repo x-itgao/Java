@@ -12,7 +12,7 @@ public class Novel implements Serializable {
     private int chapter_index;
     private String img_path;
     private String max_chapter;
-
+    private String novel_url;
     public int getId() {
         return id;
     }
@@ -53,6 +53,14 @@ public class Novel implements Serializable {
         this.max_chapter = max_chapter;
     }
 
+    public String getNovel_url() {
+        return novel_url;
+    }
+
+    public void setNovel_url(String novel_url) {
+        this.novel_url = novel_url;
+    }
+
     @Override
     public String toString() {
         return "Novel{" +
@@ -61,6 +69,7 @@ public class Novel implements Serializable {
                 ", chapter_index=" + chapter_index +
                 ", img_path='" + img_path + '\'' +
                 ", max_chapter='" + max_chapter + '\'' +
+                ", novel_url='" + novel_url + '\'' +
                 '}';
     }
 }
