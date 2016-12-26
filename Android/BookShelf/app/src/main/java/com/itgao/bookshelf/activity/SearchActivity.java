@@ -42,7 +42,8 @@ public class SearchActivity extends AppCompatActivity {
      * findImgUrl 小说的封面
      */
     private final String findNovelUrl = "window.location=\'(.*?)\'\"";
-    private final String findChaptersUrl = "<dd>.*?<a.*?href=\"(.*?)\">(.*?)</a>";
+    public static final String findChaptersUrl = "<dd>.*?<a.*?href=\"(.*?)\">(.*?)</a>";
+    private final String chapter_two = "<dl>(.*?)</dl>";
     public static final String findLatestChapter = "<p>.*?最新章节.*?<a.*?>(.*?)</a>";
     private final String findImgUrl = "<img.*?src=\"(.*?)\".*?alt=\"<em>.*?</em>";
     private final String uri = "http://zhannei.baidu.com/cse/search?s=287293036948159515&q=";
@@ -179,12 +180,15 @@ public class SearchActivity extends AppCompatActivity {
                     Log.v("newchapter",chapter);
                 }
                 save_novel(novel_name);
+
+
                 pattern1 = Pattern.compile(findChaptersUrl);
                 matcher1 = pattern1.matcher(novelList);
                 int index = 0;
                 while(matcher1.find()){
                     save_chapter(novel_uri,matcher1,novel_id,++index);
                 }
+                novelDB.update_max(novel_id,"",index);
 
             }
         } catch (Exception e) {

@@ -16,7 +16,8 @@ public class Helper extends SQLiteOpenHelper {
             "chapter_index integer," +
             "max_chapter text," +
             "img_path text," +
-            "novel_url text)";
+            "novel_url text," +
+            "max_length integer)";
     private static final String CREATE_CHAPTER = "create table Chapter(" +
             "id integer primary key autoincrement," +
             "chapter_name text," +

@@ -43,12 +43,14 @@ public class NovelActivity extends AppCompatActivity {
     private NovelDB novelDB = NovelDB.getInstance(this);
     private List<Chapter> chapterList;
 
-    private final String findChapterUrl = "<div.*?id=\"content\"><script>.*?</script>(.*?)</div>";
+    public static final String findChapterUrl = "<div.*?id=\"content\"><script>.*?</script>(.*?)</div>";
     // 滑动
     private GestureDetector gestureDetector;
     // 防止滑动
     private static final int MIN_CLICK_DELAY_TIME = 500;
     private long lastClickTime = 0;
+
+    private int wordCount = 0;
 
     // 保存当前章节的文本
     private String now_text = "";
@@ -60,7 +62,7 @@ public class NovelActivity extends AppCompatActivity {
             switch (msg.what){
                 case 1:
                     now_text = msg.obj.toString();
-                    strings = handler();
+                    strings = handle();
                     text.setText(strings.get(index));
                     break;
             }
@@ -81,6 +83,12 @@ public class NovelActivity extends AppCompatActivity {
 
     public void init_view(){
         text = (TextView) findViewById(R.id.novel);
+        text.post(new Runnable() {
+            @Override
+            public void run() {
+                wordCount = getLength();
+            }
+        });
     }
 
     // 设置滑动
@@ -139,6 +147,17 @@ public class NovelActivity extends AppCompatActivity {
 
 
     public void getNovelText(final Chapter chapter){
+
+        String s = chapter.getNovel();
+        if(s != null && !s.equals("")){
+            Log.v("s",s);
+            now_text = s;
+            strings = handle();
+            text.setText(strings.get(index));
+            Log.v("status","hava");
+            return ;
+        }
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -303,12 +322,13 @@ public class NovelActivity extends AppCompatActivity {
      */
     public int getLength(){
         int height = text.getHeight();
+
         int lineHeight = text.getLineHeight();
         int lineCount = height / lineHeight+6;
 
         float textSize = text.getTextSize();
         float lineWords = text.getWidth() / textSize;
-
+        Log.v("rte","height"+height+"lineHeight"+lineHeight+"lineWords"+lineWords+"");
         return (int)(lineCount * lineWords);
     }
 
@@ -320,7 +340,7 @@ public class NovelActivity extends AppCompatActivity {
      */
     public String read(int start,int end){
         char[] c_array = now_text.toCharArray();
-        char[] temp = new char[getLength()];
+        char[] temp = new char[wordCount];
 
         for(int i = start;i<end;i++){
             temp[index-start] = c_array[index];
@@ -336,20 +356,23 @@ public class NovelActivity extends AppCompatActivity {
      * 处理正文部分，分页
      * @return
      */
-    public List<String> handler(){
+    public List<String> handle(){
         List<String> stringList = new ArrayList<String>();
         char[] array = now_text.toCharArray();
         int index = 0;
+        Log.v("length",now_text.length()+"");
         int dop = 0;
         while(true){
 
-            char[] temp = new char[getLength()];
-            for (int i = 0;i<getLength();i++){
+            char[] temp = new char[wordCount];
+            Log.v("gegt",wordCount+"");
+            for (int i = 0;i<wordCount;i++){
                 temp[index-dop] = array[index];
                 if(array[index] == '\n'){
                     i += (int) text.getWidth() / text.getTextSize();
                 }
                 index ++;
+                Log.v("index",index+"");
                 if(index >= now_text.length()){
                     stringList.add(new String(temp));
                     return stringList;

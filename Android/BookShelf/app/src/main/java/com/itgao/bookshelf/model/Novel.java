@@ -13,6 +13,8 @@ public class Novel implements Serializable {
     private String img_path;
     private String max_chapter;
     private String novel_url;
+    private int max_length;
+
     public int getId() {
         return id;
     }
@@ -61,6 +63,14 @@ public class Novel implements Serializable {
         this.novel_url = novel_url;
     }
 
+    public int getMax_length() {
+        return max_length;
+    }
+
+    public void setMax_length(int max_length) {
+        this.max_length = max_length;
+    }
+
     @Override
     public String toString() {
         return "Novel{" +
@@ -70,6 +80,7 @@ public class Novel implements Serializable {
                 ", img_path='" + img_path + '\'' +
                 ", max_chapter='" + max_chapter + '\'' +
                 ", novel_url='" + novel_url + '\'' +
+                ", max_length=" + max_length +
                 '}';
     }
 }
