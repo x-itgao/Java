@@ -13,6 +13,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -73,22 +74,28 @@ public class NovelActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_novel);
-        init_view();
+
         gestureDetector = new GestureDetector(this,onGestureListener);
         Intent intent = getIntent();
         novel = (Novel) intent.getSerializableExtra("novel");
         chapterList = novelDB.loadAllChapters(novel.getId());
-        getNovelText(chapterList.get(chapterList.size()-1));
+
     }
 
-    public void init_view(){
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
         text = (TextView) findViewById(R.id.novel);
-        text.post(new Runnable() {
-            @Override
-            public void run() {
-                wordCount = getLength();
-            }
-        });
+        wordCount = getLength();
+        Log.v("msg",wordCount+"");
+        getNovelText(chapterList.get(chapterList.size()-1));
+        super.onWindowFocusChanged(hasFocus);
+
     }
 
     // 设置滑动
@@ -144,7 +151,6 @@ public class NovelActivity extends AppCompatActivity {
         }
         return false;
     }
-
 
     public void getNovelText(final Chapter chapter){
 
@@ -328,7 +334,6 @@ public class NovelActivity extends AppCompatActivity {
 
         float textSize = text.getTextSize();
         float lineWords = text.getWidth() / textSize;
-        Log.v("rte","height"+height+"lineHeight"+lineHeight+"lineWords"+lineWords+"");
         return (int)(lineCount * lineWords);
     }
 
@@ -357,15 +362,20 @@ public class NovelActivity extends AppCompatActivity {
      * @return
      */
     public List<String> handle(){
+
+        if(wordCount == 0){
+            Log.v("msg2",""+wordCount);
+            finish();
+        }
+
         List<String> stringList = new ArrayList<String>();
         char[] array = now_text.toCharArray();
         int index = 0;
-        Log.v("length",now_text.length()+"");
         int dop = 0;
+
         while(true){
 
             char[] temp = new char[wordCount];
-            Log.v("gegt",wordCount+"");
             for (int i = 0;i<wordCount;i++){
                 temp[index-dop] = array[index];
                 if(array[index] == '\n'){
