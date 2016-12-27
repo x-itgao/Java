@@ -9,6 +9,7 @@ import android.util.Log;
 import com.itgao.bookshelf.model.Chapter;
 import com.itgao.bookshelf.model.Novel;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +48,8 @@ public class NovelDB {
             values.put("chapter_index",novels.getChapter_index());
             values.put("img_path",novels.getImg_path());
             values.put("max_chapter",novels.getMax_chapter());
+            values.put("novel_url",novels.getNovel_url());
+            values.put("max_length",novels.getMax_length());
             db.insert("Novel",null,values);
             Cursor cursor = db.rawQuery("select last_insert_rowid() from Novel",null);
 
@@ -57,14 +60,36 @@ public class NovelDB {
         }
         return id;
     }
+
+    public void novel_delete(int id){
+        db.delete("Novel","id=?",new String[]{String.valueOf(id)});
+    }
+
     public void updateNovel(Novel novels){
         ContentValues values = new ContentValues();
         values.put("novel_name",novels.getNovel_name());
         values.put("chapter_index",novels.getChapter_index());
         values.put("img_path",novels.getImg_path());
         values.put("max_chapter",novels.getMax_chapter());
+        values.put("novel_url",novels.getNovel_url());
+        values.put("max_length",novels.getMax_length());
         db.update("Novel",values,"id = ?",new String[]{String.valueOf(novels.getId())});
 
+    }
+    public void update_max(int id,String max_chapter,int max_length){
+        ContentValues values = new ContentValues();
+        if(!"".equals(max_chapter)){
+            values.put("max_chapter",max_chapter);
+        }
+        values.put("max_length",max_length);
+        db.update("Novel",values,"id = ?",new String[]{String.valueOf(id)});
+
+    }
+
+    public void update_novel(int id,String novel){
+        ContentValues values = new ContentValues();
+        values.put("novel",novel);
+        db.update("Chapter",values,"id = ?",new String[]{String.valueOf(id)});
     }
 
 
@@ -79,6 +104,8 @@ public class NovelDB {
                 novels.setChapter_index(cursor.getInt(cursor.getColumnIndex("chapter_index")));
                 novels.setImg_path(cursor.getString(cursor.getColumnIndex("img_path")));
                 novels.setMax_chapter(cursor.getString(cursor.getColumnIndex("max_chapter")));
+                novels.setNovel_url(cursor.getString(cursor.getColumnIndex("novel_url")));
+                novels.setMax_length(cursor.getInt(cursor.getColumnIndex("max_length")));
                 list.add(novels);
             }while (cursor.moveToNext());
         }
@@ -100,7 +127,9 @@ public class NovelDB {
             db.insert("Chapter",null,values);
         }
     }
-
+    public void chapter_delete(int novel_id){
+        db.delete("Chapter","novel_id=?",new String[]{String.valueOf(novel_id)});
+    }
     public List<Chapter> loadAllChapters(int novelId){
         List<Chapter> list = new ArrayList<Chapter>();
         Cursor cursor = db.query("Chapter",null,"novel_id=?",new String[]{String.valueOf(novelId)},null,null,null);

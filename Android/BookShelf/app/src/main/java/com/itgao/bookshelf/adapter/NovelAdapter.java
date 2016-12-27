@@ -27,6 +27,7 @@ public class NovelAdapter extends ArrayAdapter<Novel>{
     private int resource_id;
     private ImageView novel_img;
     private TextView novel_update;
+    private TextView novel_name;
 
     public NovelAdapter(Context context, int resource, List<Novel> objects) {
         super(context, resource, objects);
@@ -39,6 +40,7 @@ public class NovelAdapter extends ArrayAdapter<Novel>{
         View view = LayoutInflater.from(getContext()).inflate(resource_id,null);
         novel_img = (ImageView) view.findViewById(R.id.novel_img);
         novel_update = (TextView) view.findViewById(R.id.novel_item_update);
+        novel_name = (TextView) view.findViewById(R.id.novel_name);
         String img_path = novel.getImg_path();
         if (!TextUtils.isEmpty(img_path)){
             File file = new File(img_path);
@@ -46,6 +48,7 @@ public class NovelAdapter extends ArrayAdapter<Novel>{
         }else{
             // 设置一张默认的背景图片
         }
+        novel_name.setText(novel.getNovel_name());
         novel_update.setText(novel.getMax_chapter());
         return view;
     }

@@ -6,7 +6,7 @@ package com.itgao.bookshelf.util;
 public class ReplaceTool {
     private static final String nbsp = "&nbsp;";
     private static final String br = "<br.*?></br>";
-    private static final String brbr = "<br />";
+    private static final String brbr = "<br.*?/>";
 
 
     public  static String replaceAll(String text){

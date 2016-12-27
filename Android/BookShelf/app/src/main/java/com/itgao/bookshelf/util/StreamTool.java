@@ -34,7 +34,6 @@ public class StreamTool {
             connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(8000);
-            String text = "";Log.v("data","om");
             if ((code=connection.getResponseCode()) == 200 || code==304)  {
                 InputStream inputStream = connection.getInputStream();
                 byte[] data = read(inputStream);
