@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.itgao.mediaplayer.R;
 import com.itgao.mediaplayer.domain.Mp3Info;
+import com.itgao.mediaplayer.util.LrcView;
 
 import java.util.List;
 
@@ -33,6 +34,8 @@ public class PlayerActivity extends Activity {
     private TextView currentProgress; // 当前进度消耗的时间
     private TextView finalProgress; // 歌曲时间
 
+    private long id; // 如果是在线播放会有id
+
     private String title; // 歌曲标题
     private String artist; // 歌曲艺术家
     private String url; // 歌曲路径
@@ -51,6 +54,8 @@ public class PlayerActivity extends Activity {
     private boolean isShuffle; // 随机播放
 
     private List<Mp3Info> mp3Infos;
+
+    public static LrcView lrcView;
 
     private PlayerReceiver playerReceiver;
     public static final String UPDATE_ACTION = "com.wwj.action.UPDATE_ACTION"; // 更新动作
@@ -72,6 +77,7 @@ public class PlayerActivity extends Activity {
         musicTitle = (TextView) findViewById(R.id.musicTitle);
         musicArtist = (TextView) findViewById(R.id.musicArtist);
         initView();
+        lrcView = (LrcView) findViewById(R.id.lrcShowView);
         mp3Infos = MainActivity.getMp3Infos(this);
         playerReceiver = new PlayerReceiver();
         IntentFilter filter = new IntentFilter();
@@ -85,6 +91,7 @@ public class PlayerActivity extends Activity {
         super.onResume();
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
+        id = bundle.getLong("id",-1);
         title = bundle.getString("title");
         artist = bundle.getString("artist");
         url = bundle.getString("url");
@@ -270,6 +277,9 @@ public class PlayerActivity extends Activity {
         Intent intent = new Intent();
         intent.setAction("com.wwj.media.MUSIC_SERVICE");
         intent.putExtra("url",url);
+        if(id != -1){
+            intent.putExtra("id",id);
+        }
         intent.putExtra("listPosition",listPosition);
         intent.putExtra("MSG",flag);
         startService(intent);

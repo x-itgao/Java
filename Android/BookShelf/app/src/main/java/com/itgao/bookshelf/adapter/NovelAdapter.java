@@ -1,6 +1,7 @@
 package com.itgao.bookshelf.adapter;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
@@ -17,6 +18,8 @@ import com.itgao.bookshelf.model.Novel;
 import org.w3c.dom.Text;
 
 import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -43,13 +46,34 @@ public class NovelAdapter extends ArrayAdapter<Novel>{
         novel_name = (TextView) view.findViewById(R.id.novel_name);
         String img_path = novel.getImg_path();
         if (!TextUtils.isEmpty(img_path)){
-            File file = new File(img_path);
-            novel_img.setImageURI(Uri.fromFile(file));
+            if(img_path.startsWith("http")){
+                Drawable drawable =LoadImageFromWebOperations(img_path);
+                novel_img.setImageDrawable(drawable);
+            }else {
+                File file = new File(img_path);
+
+                novel_img.setImageURI(Uri.fromFile(file));
+            }
+
         }else{
             // 设置一张默认的背景图片
         }
         novel_name.setText(novel.getNovel_name());
         novel_update.setText(novel.getMax_chapter());
         return view;
+    }
+
+
+    private Drawable LoadImageFromWebOperations(String url)
+    {
+        try
+        {
+            InputStream is = (InputStream) new URL(url).getContent();
+            Drawable d = Drawable.createFromStream(is, "src name");
+            return d;
+        }catch (Exception e) {
+            System.out.println("Exc="+e);
+            return null;
+        }
     }
 }

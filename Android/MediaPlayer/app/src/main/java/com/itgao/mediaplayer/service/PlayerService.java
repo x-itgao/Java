@@ -10,12 +10,25 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
+import android.view.animation.AnimationUtils;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.itgao.mediaplayer.R;
 import com.itgao.mediaplayer.activity.MainActivity;
 import com.itgao.mediaplayer.activity.PlayerActivity;
+import com.itgao.mediaplayer.domain.LrcContent;
 import com.itgao.mediaplayer.domain.Mp3Info;
+import com.itgao.mediaplayer.util.InternetUtil;
+import com.itgao.mediaplayer.util.MusicNetWork;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PlayerService extends Service {
@@ -34,6 +47,12 @@ public class PlayerService extends Service {
     // private List<LrcContent> lrcList = new ArrayList<LrcContent>(); //存放歌词列表对象
     private int index = 0;			//歌词检索值
 
+
+
+    // 歌词处理
+    private long id = -1;
+    private List<LrcContent> lrcList = new ArrayList<LrcContent>();
+    private LrcContent lrcContent = new LrcContent();
     //服务要发送的一些Action
     public static final String UPDATE_ACTION = "com.wwj.action.UPDATE_ACTION";	//更新动作
     public static final String CTL_ACTION = "com.wwj.action.CTL_ACTION";		//控制动作
@@ -116,6 +135,10 @@ public class PlayerService extends Service {
     }
 
     public void onStart(Intent intent,int startId){
+        id = intent.getLongExtra("id",-1);
+        if(id != -1){
+            init_lrc();
+        }
         path = intent.getStringExtra("url"); // 歌曲路径
         current = intent.getIntExtra("listPosition",-1); // 当前播放歌曲在mp3Infos的位置
         msg = intent.getIntExtra("MSG",0);
@@ -137,6 +160,12 @@ public class PlayerService extends Service {
         }else if(msg == MainActivity.PLAYING_MSG){
             handler.sendEmptyMessage(1);
         }
+    }
+
+    public void init_lrc(){
+        Cloud_Muisc_getLrcAPI(getApplicationContext(),"pc",String.valueOf(id));
+
+
     }
 
     private void play(int currentTime){
@@ -243,6 +272,135 @@ public class PlayerService extends Service {
             }
         }
     }
+
+
+    /**
+     * 获取歌曲歌词的API
+     *URL：
+
+     GET http://music.163.com/api/song/lyric
+
+     必要参数：
+
+     id：歌曲ID
+
+     lv：值为-1，我猜测应该是判断是否搜索lyric格式
+
+     kv：值为-1，这个值貌似并不影响结果，意义不明
+
+     tv：值为-1，是否搜索tlyric格式
+     * @param context
+     * @param os
+     * @param id
+     */
+    public void Cloud_Muisc_getLrcAPI(Context context,String os,String id)
+    {
+        String url = MusicNetWork.CLOUD_MUSIC_API_MUSICLRC + "os="+os+"&id="+id+"&lv=-1&kv=-1&tv=-1";
+        RequestQueue requestQueue = InternetUtil.getRequestQueue(context);
+        StringRequest straingRequest = new StringRequest(url,new Response.Listener<String>(){
+            @Override
+            public void onResponse(String s){
+                try {
+                    JSONObject json = new JSONObject(s);
+                    parse_LRC(json);
+                    PlayerActivity.lrcView.setmLrcList(lrcList);
+                    PlayerActivity.lrcView.setAnimation(AnimationUtils.loadAnimation(PlayerService.this, R.anim.alpha_z));
+                    handler.post(mRunable);
+                } catch(JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        },new Response.ErrorListener(){
+            @Override
+            public void onErrorResponse(VolleyError volleyError){
+                Log.i("onResponse: ",volleyError.toString());
+            }
+        });
+        requestQueue.add(straingRequest);
+    }
+
+    Runnable mRunable = new Runnable() {
+        @Override
+        public void run() {
+            PlayerActivity.lrcView.setIndex(lrcIndex());
+            PlayerActivity.lrcView.invalidate();
+            handler.postDelayed(mRunable,100);
+        }
+    };
+    /**
+     * 根据时间获取歌词显示的索引值
+     * @return
+     */
+    public int lrcIndex() {
+        if(mediaPlayer.isPlaying()) {
+            currentTime = mediaPlayer.getCurrentPosition();
+            duration = mediaPlayer.getDuration();
+        }
+        if(currentTime < duration) {
+            for (int i = 0; i < lrcList.size(); i++) {
+                if (i < lrcList.size() - 1) {
+                    if (currentTime < lrcList.get(i).getLrcTime() && i == 0) {
+                        index = i;
+                    }
+                    if (currentTime > lrcList.get(i).getLrcTime()
+                            && currentTime < lrcList.get(i + 1).getLrcTime()) {
+                        index = i;
+                    }
+                }
+                if (i == lrcList.size() - 1
+                        && currentTime > lrcList.get(i).getLrcTime()) {
+                    index = i;
+                }
+            }
+        }
+        return index;
+    }
+    public  void parse_LRC(JSONObject json){
+        try {
+            JSONObject lyric = json.getJSONObject("lrc");
+            String lrc = lyric.getString("lyric");
+            int index = lrc.indexOf("[");
+
+            lrc = lrc.substring(index);
+            for(String str : lrc.split("\n")){
+                str = str.replace("[","");
+                str = str.replace("]","@");
+                String splitData[] = str.split("@");
+                if(splitData.length > 1){
+                    lrcContent.setLrcStr(splitData[1]);
+                    int lrcTime = time2str(splitData[0]);
+                    lrcContent.setLrcTime(lrcTime);
+                    lrcList.add(lrcContent);
+                    lrcContent = new LrcContent();
+                }
+            }
+
+
+
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int time2str(String timeStr){
+        timeStr = timeStr.replace(":",".");
+        timeStr = timeStr.replace(".","@");
+
+        String timeData[] = timeStr.split("@");
+
+        int minute = Integer.parseInt(timeData[0]);
+        int second = Integer.parseInt(timeData[1]);
+        int millisecond = Integer.parseInt(timeData[2]);
+
+        int currentTime = (minute * 60 + second) * 1000 + millisecond * 10;
+        return currentTime;
+    }
+
+
+
+
+
 
 
     @Override

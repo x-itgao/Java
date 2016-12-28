@@ -29,6 +29,12 @@ import com.itgao.bookshelf.model.Novel;
 import com.itgao.bookshelf.util.ReplaceTool;
 import com.itgao.bookshelf.util.StreamTool;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -49,17 +55,22 @@ public class NovelActivity extends AppCompatActivity {
     // 防止滑动
     private static final int MIN_CLICK_DELAY_TIME = 500;
     private long lastClickTime = 0;
-
+    // 当前页面总字数
     private int wordCount = 0;
 
     // 保存当前章节的文本
     private String now_text = "";
     private int index = 0;
     private List<String> strings;
+    // 网上缓冲 还是本地
+    private boolean is_Net = false;
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what){
+                case 0:
+                    getNovelText(chapterList.get(novel.getChapter_index()));
+                    break;
                 case 1:
                     now_text = msg.obj.toString();
                     strings = handle();
@@ -77,9 +88,44 @@ public class NovelActivity extends AppCompatActivity {
         gestureDetector = new GestureDetector(this,onGestureListener);
         Intent intent = getIntent();
         novel = (Novel) intent.getSerializableExtra("novel");
-        chapterList = novelDB.loadAllChapters(novel.getId());
-
+        int id = novel.getId();
+        if(id == -1){
+            is_Net = true;
+            chapterList = new ArrayList<Chapter>();
+        }else {
+            is_Net = false;
+            chapterList = novelDB.loadAllChapters(id);
+        }
+        // 加载数据
+        load_chapters(novel.getNovel_url());
     }
+
+    public void load_chapters(final String url){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String html = new String(StreamTool.getHtml(url),"utf-8");
+                    Document document = Jsoup.parse(html);
+                    Element item = document.getElementById("list");
+                    Elements dd = item.getElementsByTag("a");
+                    for(Element a : dd){
+                        String link = "http://www.biquge.com"+a.attr("href");
+                        String name = a.text();
+                        Chapter chapter = new Chapter();
+                        chapter.setText_url(link);
+                        chapter.setNow_index(0);
+                        chapter.setChapter_name(name);
+                        chapterList.add(chapter);
+                    }
+                    handler.sendEmptyMessage(0);
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
 
     @Override
     protected void onResume() {
@@ -91,8 +137,10 @@ public class NovelActivity extends AppCompatActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         text = (TextView) findViewById(R.id.novel);
         wordCount = getLength();
-        Log.v("msg",wordCount+"");
-        getNovelText(chapterList.get(chapterList.size()-1));
+        if(chapterList.size() > 0){
+            getNovelText(chapterList.get(novel.getChapter_index()));
+        }
+
         super.onWindowFocusChanged(hasFocus);
 
     }
@@ -129,14 +177,14 @@ public class NovelActivity extends AppCompatActivity {
         //    updateNovel(-1);
             if(index == 0){
                 index = 0;
-                updateNovel(1);
+                updateNovel(-1);
                 return false;
             }
             text.setText(strings.get(--index));
         }else if(eventX > 540){
             if(index == strings.size() - 1){
                 index = 0;
-                updateNovel(-1);
+                updateNovel(1);
                 return false;
             }
         //    updateNovel(1);
@@ -229,7 +277,7 @@ public class NovelActivity extends AppCompatActivity {
         pre.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                updateNovel(1);
+                updateNovel(-1);
                 index = 0;
                 window.dismiss();
             }
@@ -237,7 +285,7 @@ public class NovelActivity extends AppCompatActivity {
         next.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                updateNovel(-1);
+                updateNovel(1);
                 index = 0;
                 window.dismiss();
             }
@@ -317,7 +365,10 @@ public class NovelActivity extends AppCompatActivity {
         // 这个改变只适应当前活动
         novel.setChapter_index(index);
         // 即时保存进度
-        novelDB.updateNovel(novel);
+        if(!is_Net){
+            novelDB.updateNovel(novel);
+        }
+
         getNovelText(chapterList.get(index));
     }
 

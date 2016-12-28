@@ -6,7 +6,7 @@
     <string name="artist">小巫</string>
     <string name="time">4:50</string>
     <string name="cancel">取消</string>
-    <string  name="confrim">确定</string>
+    <string name="confrim">确定</string>
     <string name="shuffle_none">随机播放已关闭</string>
     <string name="shuffle">随机播放已打开</string>
     <string name="repeat_none">重复播放已关闭</string>

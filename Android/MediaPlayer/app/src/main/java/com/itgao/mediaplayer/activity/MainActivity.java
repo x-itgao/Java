@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity{
     private TextView musicDuration; // 歌曲时间
     private Button musicPlaying; // 歌曲专辑
     private ImageView musicAlbum; // 专辑封面
+    private Button music_button;
 
     private int repeatState; // 循环标识
     private final int isCurrentRepeat = 1; // 单曲循环
@@ -114,6 +115,8 @@ public class MainActivity extends AppCompatActivity{
         musicDuration = (TextView) findViewById(R.id.music_duration);
         musicPlaying = (Button) findViewById(R.id.playing);
         musicAlbum = (ImageView) findViewById(R.id.music_album);
+        music_button = (Button) findViewById(R.id.music_search);
+
 
         ViewOnClickListener viewOnClickListener = new ViewOnClickListener();
         previousBtn.setOnClickListener(viewOnClickListener);
@@ -122,7 +125,7 @@ public class MainActivity extends AppCompatActivity{
         shuffleBtn.setOnClickListener(viewOnClickListener);
         nextBtn.setOnClickListener(viewOnClickListener);
         musicPlaying.setOnClickListener(viewOnClickListener);
-
+        music_button.setOnClickListener(viewOnClickListener);
     }
 
     private class ViewOnClickListener implements View.OnClickListener{
@@ -131,6 +134,11 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onClick(View view) {
             switch (view.getId()){
+
+                case R.id.music_search:
+                    Intent act_intent = new Intent(MainActivity.this,SearchActivity.class);
+                    startActivity(act_intent);
+                    break;
                 case R.id.previous_music: // 上一首
                     playBtn.setBackgroundResource(R.drawable.play_selector);
                     isFirstTime = false;
@@ -359,7 +367,6 @@ public class MainActivity extends AppCompatActivity{
     }
 
     public void playMusic(int listPosition) {
-        Log.v("len",mp3Infos.size()+"");
         if (mp3Infos != null) {
             Mp3Info mp3Info = mp3Infos.get(listPosition);
             musicTitle.setText(mp3Info.getTitle()); // 这里显示标题
@@ -376,7 +383,6 @@ public class MainActivity extends AppCompatActivity{
             intent.putExtra("repeatState", repeatState);
             intent.putExtra("shuffleState", isShuffle);
             intent.putExtra("MSG", PLAY_MSG);
-            Log.v("url",mp3Info.getUrl());
             startActivity(intent);
         }
     }

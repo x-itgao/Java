@@ -63,6 +63,7 @@ public class MainActivity extends Activity implements SwipeRefreshLayout.OnRefre
                     now_novel.setMax_chapter(now);
                     novelDB.updateNovel(now_novel);
                     is_to_update = 1;
+                    refresh();
                     break;
                 case 1:
                     refresh();

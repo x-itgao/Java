@@ -8,12 +8,13 @@ import java.io.Serializable;
 public class Novel implements Serializable {
 
     private int id;
-    private String novel_name;
-    private int chapter_index;
-    private String img_path;
-    private String max_chapter;
-    private String novel_url;
-    private int max_length;
+    private String novel_name; // 小说名
+    private int chapter_index; // 当前阅读的章节数
+    private String img_path; // 封面路径
+    private String max_chapter; // 最新章节名
+    private String novel_url; // 小说主页URL
+    private int max_length; // 章节数
+    private int is_net; // 作者
 
     public int getId() {
         return id;
@@ -71,6 +72,14 @@ public class Novel implements Serializable {
         this.max_length = max_length;
     }
 
+    public int getIs_net() {
+        return is_net;
+    }
+
+    public void setIs_net(int is_net) {
+        this.is_net = is_net;
+    }
+
     @Override
     public String toString() {
         return "Novel{" +
@@ -81,6 +90,7 @@ public class Novel implements Serializable {
                 ", max_chapter='" + max_chapter + '\'' +
                 ", novel_url='" + novel_url + '\'' +
                 ", max_length=" + max_length +
+                ", is_net=" + is_net +
                 '}';
     }
 }
