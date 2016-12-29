@@ -6,15 +6,11 @@ package com.itgao.mediaplayer.domain;
 public class Mp3Info {
     private long id;
     private String title; // 歌曲名称
-    private String album; // 专辑
-    private Long albumId; // 专辑ID
-    private String displayName; // 显示名称
+    private String album; //
     private String artist; // 歌手名
     private long duration ; // 歌曲时长
     private long size; // 歌曲大小
     private String url; // 歌曲路径
-    private String lrcTitle; // 歌词名称
-    private String lrcSuze; // 歌词大小
 
     @Override
     public String toString() {
@@ -22,14 +18,10 @@ public class Mp3Info {
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", album='" + album + '\'' +
-                ", albumId=" + albumId +
-                ", displayName='" + displayName + '\'' +
                 ", artist='" + artist + '\'' +
                 ", duration=" + duration +
                 ", size=" + size +
                 ", url='" + url + '\'' +
-                ", lrcTitle='" + lrcTitle + '\'' +
-                ", lrcSuze='" + lrcSuze + '\'' +
                 '}';
     }
 
@@ -55,22 +47,6 @@ public class Mp3Info {
 
     public void setAlbum(String album) {
         this.album = album;
-    }
-
-    public Long getAlbumId() {
-        return albumId;
-    }
-
-    public void setAlbumId(Long albumId) {
-        this.albumId = albumId;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
     }
 
     public String getArtist() {
@@ -103,21 +79,5 @@ public class Mp3Info {
 
     public void setUrl(String url) {
         this.url = url;
-    }
-
-    public String getLrcTitle() {
-        return lrcTitle;
-    }
-
-    public void setLrcTitle(String lrcTitle) {
-        this.lrcTitle = lrcTitle;
-    }
-
-    public String getLrcSuze() {
-        return lrcSuze;
-    }
-
-    public void setLrcSuze(String lrcSuze) {
-        this.lrcSuze = lrcSuze;
     }
 }

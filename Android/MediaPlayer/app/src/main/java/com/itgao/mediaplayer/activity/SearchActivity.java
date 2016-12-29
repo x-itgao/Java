@@ -7,11 +7,14 @@ import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -19,6 +22,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.itgao.mediaplayer.R;
 import com.itgao.mediaplayer.adapter.SearchListAdapter;
+import com.itgao.mediaplayer.db.Mp3DB;
 import com.itgao.mediaplayer.domain.LrcContent;
 import com.itgao.mediaplayer.domain.Mp3Info;
 import com.itgao.mediaplayer.util.InternetUtil;
@@ -41,7 +45,7 @@ public class SearchActivity extends AppCompatActivity {
     private List<Mp3Info> mp3Infos = new ArrayList<Mp3Info>();
     private SearchListAdapter adapter;
 
-
+    private Mp3DB mp3DB = Mp3DB.getInstance(this);
 
     private Handler handler =   new Handler(){
         @Override
@@ -97,8 +101,31 @@ public class SearchActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick                      (AdapterView<?> adapterView, View view, int i, long l) {
+                listView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+                    @Override
+                    public void onCreateContextMenu(ContextMenu contextMenu, View view, ContextMenu.ContextMenuInfo contextMenuInfo) {
+                        contextMenu.add(0,0,0,"加入列表");
+                    }
+                });
+                return false;
+            }
+        });
     }
-
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        int mid = (int) info.id;
+        switch (item.getItemId()){
+            case 0:
+                Mp3Info mp3Info = mp3Infos.get(mid);
+                mp3DB.saveMp3s(mp3Info);
+                Toast.makeText(SearchActivity.this,"保存成功",Toast.LENGTH_LONG).show();
+                break;
+        }
+        return super.onContextItemSelected(item);
+    }
 
     public void SearchMusic(Context context, String s, int limit, int type, int offset){
         String url = MusicNetWork.CLOUD_MUSIC_API_SEARCH+"type="+type+"&s='"+s+"'&limit="+limit+"&offset="+offset;

@@ -31,7 +31,9 @@ public class LrcView extends TextView{
     public void setmLrcList(List<LrcContent> mLrcList) {
         this.mLrcList = mLrcList;
     }
-
+    public void clearLrcList(){
+        mLrcList.clear();
+    }
     public LrcView(Context context) {
         super(context);
     }

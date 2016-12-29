@@ -13,12 +13,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.itgao.mediaplayer.R;
+import com.itgao.mediaplayer.db.Mp3DB;
 import com.itgao.mediaplayer.domain.Mp3Info;
 import com.itgao.mediaplayer.util.LrcView;
 
 import java.util.List;
 
-/**
+/*
  * Created by xiaogao.XU on 2016/12/26.
  */
 public class PlayerActivity extends Activity {
@@ -43,6 +44,8 @@ public class PlayerActivity extends Activity {
     private int currentTime; // 当前歌曲播放时间
     private int duration; // 歌曲长度
     private int flag; // 播放标识
+
+    private Mp3DB mp3DB = Mp3DB.getInstance(this);
 
     private int repeatState;
     private final int isCurrentRepeat = 1; // 单曲循环
@@ -78,7 +81,7 @@ public class PlayerActivity extends Activity {
         musicArtist = (TextView) findViewById(R.id.musicArtist);
         initView();
         lrcView = (LrcView) findViewById(R.id.lrcShowView);
-        mp3Infos = MainActivity.getMp3Infos(this);
+        mp3Infos = mp3DB.loadAll();
         playerReceiver = new PlayerReceiver();
         IntentFilter filter = new IntentFilter();
         filter.addAction(UPDATE_ACTION);
@@ -137,7 +140,7 @@ public class PlayerActivity extends Activity {
             play();
         }
 
-        playBtn.setBackgroundResource(R.drawable.pause_selector);
+        playBtn.setBackgroundResource(R.drawable.play_selector);
         isPlaying = true;
         isPause = false;
 
@@ -159,14 +162,14 @@ public class PlayerActivity extends Activity {
             switch (view.getId()) {
                 case R.id.play_music:
                     if (isPlaying) {
-                        playBtn.setBackgroundResource(R.drawable.play_selector);
+                        playBtn.setBackgroundResource(R.drawable.pause_selector);
                         intent.setAction("com.wwj.media.MUSIC_SERVICE");
                         intent.putExtra("MSG", MainActivity.PAUSE_MSG);
                         startService(intent);
                         isPlaying = false;
                         isPause = true;
                     } else if (isPause) {
-                        playBtn.setBackgroundResource(R.drawable.pause_selector);
+                        playBtn.setBackgroundResource(R.drawable.play_selector);
                         intent.setAction("com.wwj.media.MUSIC_SERVICE");
                         intent.putExtra("MSG", MainActivity.CONTINUE_MSG);
                         startService(intent);
@@ -325,7 +328,7 @@ public class PlayerActivity extends Activity {
 
 
     public void previous_music(){
-        playBtn.setBackgroundResource(R.drawable.pause_selector);
+        playBtn.setBackgroundResource(R.drawable.play_selector);
         listPosition = listPosition - 1;
         if(listPosition >= 0){
             Mp3Info mp3Info = mp3Infos.get(listPosition);
@@ -344,7 +347,7 @@ public class PlayerActivity extends Activity {
     }
 
     public void next_music(){
-        playBtn.setBackgroundResource(R.drawable.pause_selector);
+        playBtn.setBackgroundResource(R.drawable.play_selector);
         listPosition = listPosition + 1;
         if(listPosition <= mp3Infos.size() - 1){
             Mp3Info mp3Info = mp3Infos.get(listPosition);
@@ -385,7 +388,7 @@ public class PlayerActivity extends Activity {
                 }
                 if(listPosition == 0){
                     finalProgress.setText(MainActivity.formatTime(mp3Infos.get(listPosition).getDuration()));
-                    playBtn.setBackgroundResource(R.drawable.play_selector);
+                    playBtn.setBackgroundResource(R.drawable.pause_selector);
                     isPause = true;
                 }
             }

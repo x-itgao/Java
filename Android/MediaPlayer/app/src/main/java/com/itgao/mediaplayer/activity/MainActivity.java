@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
@@ -20,6 +21,7 @@ import android.widget.Toast;
 
 import com.itgao.mediaplayer.R;
 import com.itgao.mediaplayer.adapter.MusicListAdapter;
+import com.itgao.mediaplayer.db.Mp3DB;
 import com.itgao.mediaplayer.domain.Mp3Info;
 
 import java.util.ArrayList;
@@ -77,7 +79,9 @@ public class MainActivity extends AppCompatActivity{
     private int currentTime; // 当前时间
     private int duration; // 时长
 
+    private String FILE = "constant";
 
+    private Mp3DB mp3DB;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -98,13 +102,11 @@ public class MainActivity extends AppCompatActivity{
     }
 
     public void initView(){
+        mp3DB = Mp3DB.getInstance(this);
         mMusicList = (ListView) findViewById(R.id.music_list);
         mMusicList.setOnItemClickListener(new MusicListItemClickListener());
-        mp3Infos = getMp3Infos(this);
-        // setListAdapter(getMp3Infos(this));
-        Log.v("msg",mp3Infos.size()+"");
-        listAdapter = new MusicListAdapter(this,mp3Infos);
-        mMusicList.setAdapter(listAdapter);
+
+
 
         previousBtn = (Button) findViewById(R.id.previous_music);
         repeatBtn = (Button) findViewById(R.id.repeat_music);
@@ -126,6 +128,18 @@ public class MainActivity extends AppCompatActivity{
         nextBtn.setOnClickListener(viewOnClickListener);
         musicPlaying.setOnClickListener(viewOnClickListener);
         music_button.setOnClickListener(viewOnClickListener);
+
+        SharedPreferences preferences = getSharedPreferences(FILE,Context.MODE_PRIVATE);
+        boolean is_first = preferences.getBoolean("is_first",true);
+        if (is_first){
+            mp3Infos = getMp3Infos(this);
+            SharedPreferences.Editor editor = getSharedPreferences(FILE,Context.MODE_PRIVATE).edit();
+            editor.putBoolean("is_first",false);
+        }else {
+            mp3Infos = mp3DB.loadAll();
+        }
+        listAdapter = new MusicListAdapter(this,mp3Infos);
+        mMusicList.setAdapter(listAdapter);
     }
 
     private class ViewOnClickListener implements View.OnClickListener{
@@ -233,13 +247,14 @@ public class MainActivity extends AppCompatActivity{
                     intent.putExtra("duration", duration);
                     intent.putExtra("MSG", PLAYING_MSG);
                     startActivity(intent);
+                    PlayerActivity.lrcView.clearLrcList();
                     break;
             }
         }
     }
 
 
-    public static List<Mp3Info> getMp3Infos(Context context){
+    public List<Mp3Info> getMp3Infos(Context context){
         Cursor cursor = context.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                                 null,null,null,MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
         List<Mp3Info> mp3Infos = new ArrayList<Mp3Info>();
@@ -265,6 +280,7 @@ public class MainActivity extends AppCompatActivity{
                 mp3Info.setDuration(duration);
                 mp3Info.setSize(size);
                 mp3Info.setUrl(url);
+                mp3DB.saveMp3s(mp3Info);
                 mp3Infos.add(mp3Info);
             }
         }
@@ -293,6 +309,7 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
             listPosition = i;
+
             playMusic(listPosition);
         }
     }
@@ -340,6 +357,7 @@ public class MainActivity extends AppCompatActivity{
         intent.putExtra("url", mp3Info.getUrl());
         Log.v("url",mp3Info.getUrl());
         intent.putExtra("MSG", PLAY_MSG);
+        PlayerActivity.lrcView.clearLrcList();
         startService(intent);
     }
     // 播放样式 循环单次 随机之类的

@@ -19,6 +19,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.itgao.mediaplayer.R;
 import com.itgao.mediaplayer.activity.MainActivity;
 import com.itgao.mediaplayer.activity.PlayerActivity;
+import com.itgao.mediaplayer.db.Mp3DB;
 import com.itgao.mediaplayer.domain.LrcContent;
 import com.itgao.mediaplayer.domain.Mp3Info;
 import com.itgao.mediaplayer.util.InternetUtil;
@@ -27,7 +28,12 @@ import com.itgao.mediaplayer.util.MusicNetWork;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,8 +53,7 @@ public class PlayerService extends Service {
     // private List<LrcContent> lrcList = new ArrayList<LrcContent>(); //存放歌词列表对象
     private int index = 0;			//歌词检索值
 
-
-
+    private Mp3DB mp3DB = Mp3DB.getInstance(this);
     // 歌词处理
     private long id = -1;
     private List<LrcContent> lrcList = new ArrayList<LrcContent>();
@@ -80,7 +85,7 @@ public class PlayerService extends Service {
         super.onCreate();
         Log.v("service","service started");
         mediaPlayer = new MediaPlayer();
-        mp3Infos = MainActivity.getMp3Infos(PlayerService.this);
+        mp3Infos = mp3DB.loadAll();
 
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -134,12 +139,12 @@ public class PlayerService extends Service {
         return index;
     }
 
-    public void onStart(Intent intent,int startId){
+
+    public int onStartCommand(Intent intent,int flags, int startId){
         id = intent.getLongExtra("id",-1);
-        if(id != -1){
-            init_lrc();
-        }
+
         path = intent.getStringExtra("url"); // 歌曲路径
+        init_lrc();
         current = intent.getIntExtra("listPosition",-1); // 当前播放歌曲在mp3Infos的位置
         msg = intent.getIntExtra("MSG",0);
         if(msg == MainActivity.PLAY_MSG){
@@ -160,14 +165,67 @@ public class PlayerService extends Service {
         }else if(msg == MainActivity.PLAYING_MSG){
             handler.sendEmptyMessage(1);
         }
+        return super.onStartCommand(intent,flags,startId);
     }
 
     public void init_lrc(){
-        Cloud_Muisc_getLrcAPI(getApplicationContext(),"pc",String.valueOf(id));
-
+        lrcList.clear();
+        if(path == null){
+            return;
+        }
+        if (path.startsWith("http")){
+            Cloud_Muisc_getLrcAPI(getApplicationContext(),"pc",String.valueOf(id));
+        }else {
+            readLRC(path);
+        }
+        PlayerActivity.lrcView.setmLrcList(lrcList);
+        PlayerActivity.lrcView.setAnimation(AnimationUtils.loadAnimation(PlayerService.this, R.anim.alpha_z));
+        handler.post(mRunable);
 
     }
+    public String readLRC(String path) {
+        //定义一个StringBuilder对象，用来存放歌词内容
+        StringBuilder stringBuilder = new StringBuilder();
+        File f = new File(path.replace(".mp3", ".lrc"));
+        Log.v("msg",f.getAbsolutePath());
 
+        try {
+            //创建一个文件输入流对象
+            FileInputStream fis = new FileInputStream(f);
+            InputStreamReader isr = new InputStreamReader(fis, "utf-8");
+            BufferedReader br = new BufferedReader(isr);
+            String s = "";
+            while((s = br.readLine()) != null) {
+                //替换字符
+                s = s.replace("[", "");
+                s = s.replace("]", "@");
+
+                //分离“@”字符
+                String splitLrcData[] = s.split("@");
+                if(splitLrcData.length > 1) {
+                    lrcContent.setLrcStr(splitLrcData[1]);
+
+                    //处理歌词取得歌曲的时间
+                    int lrcTime = time2str(splitLrcData[0]);
+
+                    lrcContent.setLrcTime(lrcTime);
+
+                    //添加进列表数组
+                    lrcList.add(lrcContent);
+
+                    //新创建歌词内容对象
+                    lrcContent = new LrcContent();
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            stringBuilder.append("木有歌词文件，赶紧去下载！...");
+        } catch (IOException e) {
+            e.printStackTrace();
+            stringBuilder.append("木有读取到歌词哦！");
+        }
+        return stringBuilder.toString();
+    }
     private void play(int currentTime){
         mediaPlayer.reset();
         try {
@@ -302,10 +360,10 @@ public class PlayerService extends Service {
             public void onResponse(String s){
                 try {
                     JSONObject json = new JSONObject(s);
-                    parse_LRC(json);
-                    PlayerActivity.lrcView.setmLrcList(lrcList);
-                    PlayerActivity.lrcView.setAnimation(AnimationUtils.loadAnimation(PlayerService.this, R.anim.alpha_z));
-                    handler.post(mRunable);
+                    JSONObject lyric = json.getJSONObject("lrc");
+                    String lrc = lyric.getString("lyric");
+                    parse_LRC(lrc);
+
                 } catch(JSONException e) {
                     e.printStackTrace();
                 }
@@ -355,10 +413,7 @@ public class PlayerService extends Service {
         }
         return index;
     }
-    public  void parse_LRC(JSONObject json){
-        try {
-            JSONObject lyric = json.getJSONObject("lrc");
-            String lrc = lyric.getString("lyric");
+    public  void parse_LRC(String lrc){
             int index = lrc.indexOf("[");
 
             lrc = lrc.substring(index);
@@ -374,13 +429,6 @@ public class PlayerService extends Service {
                     lrcContent = new LrcContent();
                 }
             }
-
-
-
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 
     public int time2str(String timeStr){
