@@ -13,6 +13,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -83,21 +84,23 @@ public class NovelActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_novel);
 
         gestureDetector = new GestureDetector(this,onGestureListener);
         Intent intent = getIntent();
         novel = (Novel) intent.getSerializableExtra("novel");
-        int id = novel.getId();
-        if(id == -1){
+        int id = novel.getIs_net();
+        if(id == 1){
             is_Net = true;
             chapterList = new ArrayList<Chapter>();
+            load_chapters(novel.getNovel_url());
         }else {
             is_Net = false;
-            chapterList = novelDB.loadAllChapters(id);
+            chapterList = novelDB.loadAllChapters(novel.getId());
         }
         // 加载数据
-        load_chapters(novel.getNovel_url());
+
     }
 
     public void load_chapters(final String url){
@@ -126,7 +129,6 @@ public class NovelActivity extends AppCompatActivity {
         }).start();
     }
 
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -138,7 +140,7 @@ public class NovelActivity extends AppCompatActivity {
         text = (TextView) findViewById(R.id.novel);
         wordCount = getLength();
         if(chapterList.size() > 0){
-            getNovelText(chapterList.get(novel.getChapter_index()));
+        //    getNovelText(chapterList.get(novel.getChapter_index()));
         }
 
         super.onWindowFocusChanged(hasFocus);
@@ -203,11 +205,9 @@ public class NovelActivity extends AppCompatActivity {
 
         String s = chapter.getNovel();
         if(s != null && !s.equals("")){
-            Log.v("s",s);
             now_text = s;
             strings = handle();
             text.setText(strings.get(index));
-            Log.v("status","hava");
             return ;
         }
 
@@ -235,7 +235,7 @@ public class NovelActivity extends AppCompatActivity {
                     }
                 }catch (Exception e){
                     Message msg = new Message();
-                    msg.what = 1;
+                    msg.what = -1;
                     msg.obj = "网络异常";
                     handler.sendMessage(msg);
                     e.printStackTrace();
@@ -266,7 +266,6 @@ public class NovelActivity extends AppCompatActivity {
         int []location = new int[2];
         this.findViewById(R.id.novel_screen).getLocationOnScreen(location);
         window.showAtLocation(this.findViewById(R.id.novel_screen), Gravity.BOTTOM, 0, 0);
-        Log.v("dd","test");
         ImageButton pre = (ImageButton) view.findViewById(R.id.novel_util_pre_page);
         ImageButton next = (ImageButton) view.findViewById(R.id.novel_util_next_page);
         ImageButton novel_util_catalog = (ImageButton) view.findViewById(R.id.novel_util_catalog);
@@ -343,7 +342,7 @@ public class NovelActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-
+                index = 0;
                 getNovelText(chapterList.get(position));
                 novel.setChapter_index(position);
                 window.dismiss();
@@ -380,7 +379,7 @@ public class NovelActivity extends AppCompatActivity {
         int height = text.getHeight();
 
         int lineHeight = text.getLineHeight();
-        int lineCount = height / lineHeight+6;
+        int lineCount = height / lineHeight;
 
         float textSize = text.getTextSize();
         float lineWords = text.getWidth() / textSize;
@@ -414,7 +413,6 @@ public class NovelActivity extends AppCompatActivity {
     public List<String> handle(){
 
         if(wordCount == 0){
-            Log.v("msg2",""+wordCount);
             finish();
         }
 

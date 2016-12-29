@@ -50,7 +50,7 @@ public class NovelDB {
             values.put("max_chapter",novels.getMax_chapter());
             values.put("novel_url",novels.getNovel_url());
             values.put("max_length",novels.getMax_length());
-            values.put("author",novels.getAuthor());
+            values.put("is_net",novels.getIs_net());
             db.insert("Novel",null,values);
             Cursor cursor = db.rawQuery("select last_insert_rowid() from Novel",null);
 
@@ -74,7 +74,7 @@ public class NovelDB {
         values.put("max_chapter",novels.getMax_chapter());
         values.put("novel_url",novels.getNovel_url());
         values.put("max_length",novels.getMax_length());
-        values.put("author",novels.getAuthor());
+        values.put("is_net",novels.getIs_net());
         db.update("Novel",values,"id = ?",new String[]{String.valueOf(novels.getId())});
 
     }
@@ -84,6 +84,13 @@ public class NovelDB {
             values.put("max_chapter",max_chapter);
         }
         values.put("max_length",max_length);
+        db.update("Novel",values,"id = ?",new String[]{String.valueOf(id)});
+
+    }
+    public void update_net(int id,int is_net){
+        ContentValues values = new ContentValues();
+
+        values.put("is_net",is_net);
         db.update("Novel",values,"id = ?",new String[]{String.valueOf(id)});
 
     }
@@ -108,7 +115,7 @@ public class NovelDB {
                 novels.setMax_chapter(cursor.getString(cursor.getColumnIndex("max_chapter")));
                 novels.setNovel_url(cursor.getString(cursor.getColumnIndex("novel_url")));
                 novels.setMax_length(cursor.getInt(cursor.getColumnIndex("max_length")));
-                novels.setAuthor(cursor.getString(cursor.getColumnIndex("author")));
+                novels.setIs_net(cursor.getInt(cursor.getColumnIndex("is_net")));
                 list.add(novels);
             }while (cursor.moveToNext());
         }

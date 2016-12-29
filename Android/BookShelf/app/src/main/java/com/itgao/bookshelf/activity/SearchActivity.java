@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -88,6 +89,7 @@ public class SearchActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_search);
         init_view();
         listen();
@@ -235,8 +237,23 @@ public class SearchActivity extends AppCompatActivity {
         return super.onContextItemSelected(item);
     }
 
-    public void add2Shelf(int id){
-        Novel novel = novels.get(id);
+    public void add2Shelf(final int id){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Novel novel = novels.get(id);
+                novel.setIs_net(1);
+
+                File file = new File(cache,UUID.randomUUID()+".jpg");
+                StreamTool.getImage(novel.getNovel_url(),file);
+                novel.setImg_path(file.getAbsolutePath());
+                Log.v("path",novel.getImg_path());
+                novelDB.saveNovel(novel);
+
+                Log.v("msg",novel.toString());
+            }
+        }).start();
+
 
     }
 

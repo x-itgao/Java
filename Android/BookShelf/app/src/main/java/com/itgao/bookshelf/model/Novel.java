@@ -14,7 +14,7 @@ public class Novel implements Serializable {
     private String max_chapter; // 最新章节名
     private String novel_url; // 小说主页URL
     private int max_length; // 章节数
-    private int is_net; // 作者
+    private int is_net; // 在线还是本地
 
     public int getId() {
         return id;

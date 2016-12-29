@@ -24,7 +24,13 @@ import com.itgao.bookshelf.model.Novel;
 import com.itgao.bookshelf.util.ReplaceTool;
 import com.itgao.bookshelf.util.StreamTool;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -166,10 +172,40 @@ public class MainActivity extends Activity implements SwipeRefreshLayout.OnRefre
 
     public void download_All(int id){
         Novel novel = list.get(id);
-        List<Chapter> chapters = novelDB.loadAllChapters(novel.getId());
+        load_chapters(novel.getNovel_url(),novel.getId());
 
-        get_Novel(chapters);
 
+    }
+    public void load_chapters(final String url,final int id){
+        final List<Chapter> chapters = new ArrayList<Chapter>();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String html = new String(StreamTool.getHtml(url),"utf-8");
+                    Document document = Jsoup.parse(html);
+                    Element item = document.getElementById("list");
+                    Elements dd = item.getElementsByTag("a");
+                    for(Element a : dd){
+                        String link = "http://www.biquge.com"+a.attr("href");
+                        String name = a.text();
+                        Chapter chapter = new Chapter();
+                        chapter.setText_url(link);
+                        chapter.setNovel_id(id);
+                        chapter.setNow_index(0);
+                        chapter.setChapter_name(name);
+
+                        chapters.add(chapter);
+                        novelDB.saveChapter(chapter);
+                    }
+                    novelDB.update_net(id,0);
+                    get_Novel(chapters);
+
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
     public void get_Novel(final List<Chapter> chapters){
 
@@ -265,31 +301,11 @@ public class MainActivity extends Activity implements SwipeRefreshLayout.OnRefre
                     handler.sendMessage(error);
                     e.printStackTrace();
                 }
-
-                Pattern pattern = Pattern.compile(SearchActivity.findChaptersUrl);
+                Pattern pattern = Pattern.compile(SearchActivity.findLatestChapter);
                 Matcher matcher = pattern.matcher(html);
-                int index = -1;
-                while(matcher.find()){
-                    index ++;
-                    if(index > now_novel.getMax_length()){
-                        String url = "http://www.biquge.com"+matcher.group(1);
-                        String name = matcher.group(2);
-                        Chapter chapter = new Chapter();
-                        chapter.setChapter_name(name);
-                        chapter.setNovel("");
-                        chapter.setNovel_id(now_novel.getId());
-                        chapter.setNow_index(index);
-                        chapter.setText_url(url);
-                        novelDB.saveChapter(chapter);
-                        Log.v("chapter",chapter.toString());
-                    }
-                }
-
-
-                pattern = Pattern.compile(SearchActivity.findLatestChapter);
-                matcher = pattern.matcher(html);
                 if(matcher.find()){
                     String now = matcher.group(1);
+                    Log.v("new",now+"  "+old);
                     // 现在先不做判断，全部更新一波
                     Message msg = new Message();
                     msg.what = 0;
