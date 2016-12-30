@@ -71,10 +71,10 @@ public class NovelAdapter extends ArrayAdapter<Novel>{
         if (!TextUtils.isEmpty(img_path)){
             if(img_path.startsWith("http")){
                 getHttpBitMap(img_path);
-                Log.v("msg","1");
             }else {
                 Bitmap bitmap = getLocalBitmap(img_path);
                 novel_img.setImageBitmap(bitmap);
+                novel_img.setBackgroundResource(R.drawable.nopic);
             }
         }else{
             // 设置一张默认的背景图片

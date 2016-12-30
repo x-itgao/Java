@@ -65,10 +65,7 @@ public class MainActivity extends Activity implements SwipeRefreshLayout.OnRefre
                     showToast(msg.obj.toString());
                     break;
                 case 0:
-                    now = msg.obj.toString();
-                    now_novel.setMax_chapter(now);
-                    novelDB.updateNovel(now_novel);
-                    is_to_update = 1;
+
                     refresh();
                     break;
                 case 1:
@@ -271,8 +268,7 @@ public class MainActivity extends Activity implements SwipeRefreshLayout.OnRefre
     public void waiting(){
         Message msg = new Message();
         for(Novel novel:list){
-            now_novel = novel;
-            getUpdating(novel.getNovel_url(),novel.getMax_chapter());
+            getUpdating(novel);
 
         }
         if(is_to_update == 1){
@@ -287,13 +283,13 @@ public class MainActivity extends Activity implements SwipeRefreshLayout.OnRefre
     /**
      * 获取更新
      */
-    public void getUpdating(final String url,final String old){
+    public void getUpdating(final Novel novel){
         new Thread(new Runnable() {
             @Override
             public void run() {
                 String html = null;
                 try {
-                    html = new String(StreamTool.getHtml(url),"utf-8");
+                    html = new String(StreamTool.getHtml(novel.getNovel_url()),"utf-8");
                 } catch (UnsupportedEncodingException e) {
                     Message error = new Message();
                     error.what = -1;
@@ -305,8 +301,13 @@ public class MainActivity extends Activity implements SwipeRefreshLayout.OnRefre
                 Matcher matcher = pattern.matcher(html);
                 if(matcher.find()){
                     String now = matcher.group(1);
-                    Log.v("new",now+"  "+old);
+                    Log.v("newkjk",now+"  "+novel.getMax_chapter());
                     // 现在先不做判断，全部更新一波
+                //    now_novel = novel;
+                    novel.setMax_chapter(now);
+                //    now_novel.setMax_chapter(now);
+                    novelDB.updateNovel(novel);
+
                     Message msg = new Message();
                     msg.what = 0;
                     msg.obj = now;

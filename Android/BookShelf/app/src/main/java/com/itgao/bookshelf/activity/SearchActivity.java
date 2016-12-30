@@ -210,7 +210,7 @@ public class SearchActivity extends AppCompatActivity {
                 novel.setNovel_url(novel_url);
                 novel.setChapter_index(0);
                 novel.setNovel_name(title);
-                novel.setId(-1);
+                novel.setIs_net(1);
                 novels.add(novel);
             }
 
